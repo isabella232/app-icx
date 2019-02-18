@@ -25,6 +25,7 @@
 #define TEST_MODE   0
 
 #define MAX_BIP32_PATH 10
+#define MAX_VALUE_LEN 66
 
 #define CLA 0xE0
 #define INS_GET_PUBLIC_KEY 0x02
@@ -915,21 +916,21 @@ static int onTokenEnd(Parser* parser, const char* token, int len) {
         }
         return 0;
     } else if (parser->state==PARSER_STATE_VALUE_FEE) {
-        if (len > 34)
+        if (len > MAX_VALUE_LEN)
             return -1;
         if (!isValidHex(token, len))
             return -1;
         parser->hasFee = true;
         parseHex256(token+2, len-2, &parser->fee);
     } else if (parser->state==PARSER_STATE_VALUE_STEP_LIMIT) {
-        if (len > 34)
+        if (len > MAX_VALUE_LEN)
             return -1;
         if (!isValidHex(token, len))
             return -1;
         parser->hasStepLimit = true;
         parseHex256(token+2, len-2, &parser->stepLimit);
     } else if (parser->state==PARSER_STATE_VALUE_VALUE) {
-        if (len > 34)
+        if (len > MAX_VALUE_LEN)
             return -1;
         if (!isValidHex(token, len))
             return -1;
@@ -958,10 +959,15 @@ void parser_init(Parser* parser) {
     parser->isEscaping = true;
     parser->wp = parser->buf;
     parser->hasFee = false;
+    clear256(&parser->fee);
     parser->hasStepLimit = false;
+    clear256(&parser->stepLimit);
     parser->hasTo = false;
+    parser->to[0] = 0;
     parser->hasValue = false;
+    clear256(&parser->value);
     parser->hasVersion = false;
+    parser->version = 0;
 }
 
 inline const char* parser_endOfBuf(Parser* parser) {
@@ -1139,8 +1145,14 @@ void handleSign() {
     fullAmount[1] = 'C';
     fullAmount[2] = 'X';
     fullAmount[3] = ' ';
-    adjustDecimals((char *)(g_aio_buf + 100), i,
+    bool res;
+    res = adjustDecimals((char *)(g_aio_buf + 100), i,
                             fullAmount+4, sizeof(fullAmount)-4, ICX_EXP);
+    if (!res) {
+        aio_write16(SW_BAD_DATA);
+        g_isSigning = false;
+        return;
+    }
 
 
     if (version>=0x03) {
@@ -1167,8 +1179,13 @@ void handleSign() {
             fullFee[2] = 'X';
             fullFee[3] = ' ';
         }
-        adjustDecimals((char *)(g_aio_buf + 100), i,
+        res = adjustDecimals((char *)(g_aio_buf + 100), i,
                                 fullFee+4, sizeof(fullFee)-4, ICX_EXP);
+        if (!res) {
+            aio_write16(SW_BAD_DATA);
+            g_isSigning = false;
+            return;
+        }
     }
 
     skipWarning = true;
