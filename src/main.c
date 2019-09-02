@@ -495,11 +495,13 @@ unsigned int io_seproxyhal_touch_tx_ok(const bagl_element_t *e) {
     } else 
 #endif    
     {
+        io_seproxyhal_io_heartbeat();
         os_perso_derive_node_bip32(
             CX_CURVE_256K1, tmpCtx.transactionContext.bip32Path,
             tmpCtx.transactionContext.pathLength, privateKeyData, NULL);
         cx_ecfp_init_private_key(CX_CURVE_256K1, privateKeyData, 32, &privateKey);
         os_memset(privateKeyData, 0, sizeof(privateKeyData));
+        io_seproxyhal_io_heartbeat();
     }
 
     unsigned int info = 0;
@@ -508,6 +510,7 @@ unsigned int io_seproxyhal_touch_tx_ok(const bagl_element_t *e) {
                       tmpCtx.transactionContext.hash,
                       sizeof(tmpCtx.transactionContext.hash), signature,
                       sizeof(signature), &info);
+    io_seproxyhal_io_heartbeat();
     if (info & CX_ECCINFO_PARITY_ODD) {
         signature[0] |= 0x01;
     }
