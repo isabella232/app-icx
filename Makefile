@@ -10,7 +10,7 @@ include $(BOLOS_SDK)/Makefile.defines
 
 # All but bitcoin app use dependency onto the bitcoin app/lib
 APP_LOAD_FLAGS=--appFlags 0x250
-APP_LOAD_PARAMS=--curve secp256k1 $(COMMON_LOAD_PARAMS) 
+APP_LOAD_PARAMS=--curve secp256k1 $(COMMON_LOAD_PARAMS)
 
 APPVERSION_M=1
 APPVERSION_N=0
@@ -28,12 +28,10 @@ endif
 
 ifeq ($(TARGET_NAME),TARGET_BLUE)
 ICONNAME=blue_app_$(COIN).gif
-else
-	ifeq ($(TARGET_NAME),TARGET_NANOX)
-ICONNAME=nanox_app_$(COIN).gif
-	else
+else ifeq ($(TARGET_NAME),TARGET_NANOS)
 ICONNAME=nanos_app_$(COIN).gif
-	endif
+else
+ICONNAME=nanox_app_$(COIN).gif
 endif
 
 
@@ -70,9 +68,9 @@ DEFINES   += LEDGER_MAJOR_VERSION=$(APPVERSION_M) LEDGER_MINOR_VERSION=$(APPVERS
 DEFINES   += UNUSED\(x\)=\(void\)x
 DEFINES   += APPVERSION=\"$(APPVERSION)\"
 
-DEFINES   += HAVE_IO_U2F HAVE_U2F 
+DEFINES   += HAVE_IO_U2F HAVE_U2F
 DEFINES   += U2F_PROXY_MAGIC=\"ICON\"
-DEFINES   += USB_SEGMENT_SIZE=64 
+DEFINES   += USB_SEGMENT_SIZE=64
 DEFINES   += BLE_SEGMENT_SIZE=32 #max MTU, min 20
 
 #WEBUSB_URL     = www.ledgerwallet.com
@@ -97,10 +95,10 @@ endif
 DEBUG = 0
 ifneq ($(DEBUG),0)
 
-        ifeq ($(TARGET_NAME),TARGET_NANOX)
-                DEFINES   += HAVE_PRINTF PRINTF=mcu_usb_printf
-        else
+        ifeq ($(TARGET_NAME),TARGET_NANOS)
                 DEFINES   += HAVE_PRINTF PRINTF=screen_printf
+        else
+                DEFINES   += HAVE_PRINTF PRINTF=mcu_usb_printf
         endif
 else
         DEFINES   += PRINTF\(...\)=
@@ -131,7 +129,7 @@ AS     := $(GCCPATH)arm-none-eabi-gcc
 
 LD       := $(GCCPATH)arm-none-eabi-gcc
 LDFLAGS  += -O3 -Os
-LDLIBS   += -lm -lgcc -lc 
+LDLIBS   += -lm -lgcc -lc
 
 # import rules to compile glyphs(/pone)
 include $(BOLOS_SDK)/Makefile.glyphs
@@ -139,10 +137,10 @@ include $(BOLOS_SDK)/Makefile.glyphs
 ### variables processed by the common makefile.rules of the SDK to grab source files and include dirs
 APP_SOURCE_PATH  += src
 SDK_SOURCE_PATH  += lib_stusb lib_u2f lib_stusb_impl
+SDK_SOURCE_PATH  += lib_ux
 
 ifeq ($(TARGET_NAME),TARGET_NANOX)
 SDK_SOURCE_PATH  += lib_blewbxx lib_blewbxx_impl
-SDK_SOURCE_PATH  += lib_ux
 endif
 
 load: all

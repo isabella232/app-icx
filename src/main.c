@@ -91,7 +91,7 @@ inline void aio_write(const uint8_t* in, int len) {
 */
 unsigned char G_io_seproxyhal_spi_buffer[IO_SEPROXYHAL_BUFFER_SIZE_B];
 
-#ifdef TARGET_NANOX
+#if defined(TARGET_NANOX) || defined(TARGET_NANOS2)
 #include "ux.h"
 ux_state_t G_ux;
 bolos_ux_params_t G_ux_params;
@@ -561,19 +561,19 @@ unsigned int ui_approval_nanos_button(unsigned int button_mask,
 }
 
 
-#if defined(TARGET_NANOX)
+#if defined(TARGET_NANOX) || defined(TARGET_NANOS2)
 
 //////////////////////////////////////////////////////////////////////
 UX_STEP_NOCB(
-    ux_idle_flow_1_step, 
-    nn, 
+    ux_idle_flow_1_step,
+    nn,
     {
       "Application",
       "is ready",
     });
 UX_STEP_NOCB(
-    ux_idle_flow_3_step, 
-    bn, 
+    ux_idle_flow_3_step,
+    bn,
     {
       "Version",
       APPVERSION,
@@ -668,8 +668,8 @@ UX_STEP_VALID(
       "Approve",
     });
 UX_STEP_VALID(
-    ux_display_public_flow_7_step, 
-    pb, 
+    ux_display_public_flow_7_step,
+    pb,
     io_seproxyhal_touch_address_cancel(NULL),
     {
       &C_icon_crossmark,
@@ -692,7 +692,7 @@ static void ui_idle(void)
 {
 #if defined(TARGET_NANOS)
     UX_MENU_DISPLAY(0, menu_main, NULL);
-#elif defined(TARGET_NANOX)
+#elif defined(TARGET_NANOX) || defined(TARGET_NANOS2)
     // reserve a display stack slot if none yet
     if(G_ux.stack_count == 0) {
         ux_stack_push();
@@ -977,7 +977,7 @@ void handleGetPublicKey() {
         ux_step = 0;
         ux_step_count = 2;
         UX_DISPLAY(ui_address_nanos, ui_address_prepro);
-#elif defined(TARGET_NANOX)
+#elif defined(TARGET_NANOX) || defined(TARGET_NANOS2)
         // reserve a display stack slot if none yet
         if(G_ux.stack_count == 0) {
             ux_stack_push();
@@ -1350,7 +1350,7 @@ void handleSign() {
     ux_step = 0;
     ux_step_count = 5;
     UX_DISPLAY(ui_approval_nanos, ui_approval_prepro);
-#elif defined(TARGET_NANOX)
+#elif defined(TARGET_NANOX) || defined(TARGET_NANOS2)
     // reserve a display stack slot if none yet
     if(G_ux.stack_count == 0) {
         ux_stack_push();
@@ -1444,10 +1444,10 @@ __attribute__((section(".boot"))) int main(int arg0) {
             TRY {
                 io_seproxyhal_init();
 
-#ifdef TARGET_NANOX
+#ifdef HAVE_BLE
                 // grab the current plane mode setting
                 G_io_app.plane_mode = os_setting_get(OS_SETTING_PLANEMODE, NULL, 0);
-#endif // TARGET_NANOX
+#endif // HAVE_BLE
 
                 USB_power(0);
                 USB_power(1);
